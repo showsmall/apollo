@@ -13,10 +13,11 @@ import java.util.stream.Collectors;
  */
 public class ConfigToFileUtils {
 
+  @Deprecated
   public static void itemsToFile(OutputStream os, List<String> items) {
     try {
       PrintWriter printWriter = new PrintWriter(os);
-      items.forEach(item -> printWriter.println(item));
+      items.forEach(printWriter::println);
       printWriter.close();
     } catch (Exception e) {
       throw e;

@@ -15,8 +15,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -63,7 +61,7 @@ public class ConfigFileController implements ReleaseMessageListener {
       watchedKeys2CacheKey = Multimaps.synchronizedSetMultimap(HashMultimap.create());
   private final Multimap<String, String>
       cacheKey2WatchedKeys = Multimaps.synchronizedSetMultimap(HashMultimap.create());
-  private static final Gson gson = new Gson();
+  private static final Gson GSON = new Gson();
 
   private final ConfigController configController;
   private final NamespaceUtil namespaceUtil;
@@ -77,29 +75,21 @@ public class ConfigFileController implements ReleaseMessageListener {
       final GrayReleaseRulesHolder grayReleaseRulesHolder) {
     localCache = CacheBuilder.newBuilder()
         .expireAfterWrite(EXPIRE_AFTER_WRITE, TimeUnit.MINUTES)
-        .weigher(new Weigher<String, String>() {
-          @Override
-          public int weigh(String key, String value) {
-            return value == null ? 0 : value.length();
-          }
-        })
+        .weigher((Weigher<String, String>) (key, value) -> value == null ? 0 : value.length())
         .maximumWeight(MAX_CACHE_SIZE)
-        .removalListener(new RemovalListener<String, String>() {
-          @Override
-          public void onRemoval(RemovalNotification<String, String> notification) {
-            String cacheKey = notification.getKey();
-            logger.debug("removing cache key: {}", cacheKey);
-            if (!cacheKey2WatchedKeys.containsKey(cacheKey)) {
-              return;
-            }
-            //create a new list to avoid ConcurrentModificationException
-            List<String> watchedKeys = new ArrayList<>(cacheKey2WatchedKeys.get(cacheKey));
-            for (String watchedKey : watchedKeys) {
-              watchedKeys2CacheKey.remove(watchedKey, cacheKey);
-            }
-            cacheKey2WatchedKeys.removeAll(cacheKey);
-            logger.debug("removed cache key: {}", cacheKey);
+        .removalListener(notification -> {
+          String cacheKey = notification.getKey();
+          logger.debug("removing cache key: {}", cacheKey);
+          if (!cacheKey2WatchedKeys.containsKey(cacheKey)) {
+            return;
           }
+          //create a new list to avoid ConcurrentModificationException
+          List<String> watchedKeys = new ArrayList<>(cacheKey2WatchedKeys.get(cacheKey));
+          for (String watchedKey : watchedKeys) {
+            watchedKeys2CacheKey.remove(watchedKey, cacheKey);
+          }
+          cacheKey2WatchedKeys.removeAll(cacheKey);
+          logger.debug("removed cache key: {}", cacheKey);
         })
         .build();
     propertiesResponseHeaders = new HttpHeaders();
@@ -239,7 +229,7 @@ public class ConfigFileController implements ReleaseMessageListener {
         result = PropertiesUtil.toString(properties);
         break;
       case JSON:
-        result = gson.toJson(apolloConfig.getConfigurations());
+        result = GSON.toJson(apolloConfig.getConfigurations());
         break;
     }
 

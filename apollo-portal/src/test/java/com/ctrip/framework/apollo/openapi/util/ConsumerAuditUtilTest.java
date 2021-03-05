@@ -8,8 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyCollectionOf;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -61,15 +60,12 @@ public class ConsumerAuditUtilTest {
 
     SettableFuture<List<ConsumerAudit>> result = SettableFuture.create();
 
-    doAnswer(new Answer<Void>() {
-      @Override
-      public Void answer(InvocationOnMock invocation) throws Throwable {
-        Object[] args = invocation.getArguments();
-        result.set((List<ConsumerAudit>) args[0]);
+    doAnswer((Answer<Void>) invocation -> {
+      Object[] args = invocation.getArguments();
+      result.set((List<ConsumerAudit>) args[0]);
 
-        return null;
-      }
-    }).when(consumerService).createConsumerAudits(anyCollectionOf(ConsumerAudit.class));
+      return null;
+    }).when(consumerService).createConsumerAudits(anyCollection());
 
     consumerAuditUtil.audit(request, someConsumerId);
 

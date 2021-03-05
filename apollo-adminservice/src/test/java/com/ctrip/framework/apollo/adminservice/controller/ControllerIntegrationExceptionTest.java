@@ -21,7 +21,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.Map;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class ControllerIntegrationExceptionTest extends AbstractControllerTest {
@@ -37,7 +37,7 @@ public class ControllerIntegrationExceptionTest extends AbstractControllerTest {
   @Autowired
   AppService appService;
 
-  Gson gson = new Gson();
+  private static final Gson GSON = new Gson();
 
   @Before
   public void setUp() {
@@ -68,7 +68,7 @@ public class ControllerIntegrationExceptionTest extends AbstractControllerTest {
       restTemplate.postForEntity(getBaseAppUrl(), dto, AppDTO.class);
     } catch (HttpStatusCodeException e) {
       @SuppressWarnings("unchecked")
-      Map<String, String> attr = gson.fromJson(e.getResponseBodyAsString(), Map.class);
+      Map<String, String> attr = GSON.fromJson(e.getResponseBodyAsString(), Map.class);
       Assert.assertEquals("save failed", attr.get("message"));
     }
     App savedApp = appService.findOne(dto.getAppId());

@@ -10,9 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-
 @Configuration
 @Profile("ctrip")
 public class WebContextConfiguration {
@@ -27,22 +24,17 @@ public class WebContextConfiguration {
 
   @Bean
   public ServletContextInitializer servletContextInitializer() {
+    return servletContext -> {
+      String loggingServerIP = portalConfig.cloggingUrl();
+      String loggingServerPort = portalConfig.cloggingPort();
+      String credisServiceUrl = portalConfig.credisServiceUrl();
 
-    return new ServletContextInitializer() {
-
-      @Override
-      public void onStartup(ServletContext servletContext) throws ServletException {
-        String loggingServerIP = portalConfig.cloggingUrl();
-        String loggingServerPort = portalConfig.cloggingPort();
-        String credisServiceUrl = portalConfig.credisServiceUrl();
-
-        servletContext.setInitParameter("loggingServerIP",
-            Strings.isNullOrEmpty(loggingServerIP) ? "" : loggingServerIP);
-        servletContext.setInitParameter("loggingServerPort",
-            Strings.isNullOrEmpty(loggingServerPort) ? "" : loggingServerPort);
-        servletContext.setInitParameter("credisServiceUrl",
-            Strings.isNullOrEmpty(credisServiceUrl) ? "" : credisServiceUrl);
-      }
+      servletContext.setInitParameter("loggingServerIP",
+          Strings.isNullOrEmpty(loggingServerIP) ? "" : loggingServerIP);
+      servletContext.setInitParameter("loggingServerPort",
+          Strings.isNullOrEmpty(loggingServerPort) ? "" : loggingServerPort);
+      servletContext.setInitParameter("credisServiceUrl",
+          Strings.isNullOrEmpty(credisServiceUrl) ? "" : credisServiceUrl);
     };
   }
 
